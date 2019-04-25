@@ -44,8 +44,6 @@ var (
 	key           = []byte(keyVal)
 	store         = sessions.NewCookieStore(key)
 	credhubServer = os.Getenv("CREDHUB_SERVER")
-	uiSslCert     = os.Getenv("UI_SSL_CERT")
-	uiSslKey      = os.Getenv("UI_SSL_KEY")
 	cookieName    = os.Getenv("COOKIE_NAME")
 	clientID      = os.Getenv("CLIENT_ID")
 	clientSecret  = os.Getenv("CLIENT_SECRET")
@@ -224,8 +222,6 @@ func main() {
 	keyValVar := flag.String("cookie-key", "", "Must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)")
 	cookieNameVar := flag.String("cookie-name", "auth-cookie", "Name of the cookie to use (auth-cookie)")
 	credhubServerVar := flag.String("credhub-server", "", "URL of CredHub server to target (https://<ip-or-host>:<port>)")
-	uiSslCertVar := flag.String("ui-ssl-cert", "", "SSL certificate for the web frontend (server.crt)")
-	uiSslKeyVar := flag.String("ui-ssl-key", "", "SSL certificate key for the web frontend (server.key)")
 	clientIDVar := flag.String("client-id", "", "Client ID that has credhub.read and credhub.write authorization")
 	clientSecretVar := flag.String("client-secret", "", "Secret for the Client ID")
 	uiUrlVar := flag.String("ui-url", "", "URL of this UI (https://<ip-or-host>:<port>)")
@@ -252,20 +248,6 @@ func main() {
 			store = sessions.NewCookieStore(key)
 		} else {
 			log.Fatalln("COOKIE_NAME not set")
-		}
-	}
-	if len(os.Getenv("UI_SSL_CERT")) == 0 {
-		if *uiSslCertVar != "" {
-			uiSslCert = *uiSslCertVar
-		} else {
-			log.Fatalln("UI_SSL_CERT not set")
-		}
-	}
-	if len(os.Getenv("UI_SSL_KEY")) == 0 {
-		if *uiSslKeyVar != "" {
-			uiSslKey = *uiSslKeyVar
-		} else {
-			log.Fatalln("UI_SSL_KEY not set")
 		}
 	}
 	if len(os.Getenv("CLIENT_ID")) == 0 {
@@ -320,7 +302,7 @@ func main() {
 	r.HandleFunc("/favicon.ico", FaviconHandler)
 	r.HandleFunc("/", ValidateToken(ListCredentials))
 
-	err := http.ListenAndServeTLS(":8443", uiSslCert, uiSslKey, LogRequest(r))
+	err := http.ListenAndServe(":8080", LogRequest(r))
 	if err != nil {
 		fmt.Println(err)
 	}
